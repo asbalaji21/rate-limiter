@@ -48,3 +48,24 @@ Once the key is expired, it is removed from the redis and the same key is create
 > Key Format: prototype:rate-limit:{userId}:{API endpoint}
 
 ---
+
+#### API Contract
+
+> **_Sample Request Curl_**
+> 
+> postman request POST 'http://localhost:8080/v1/rate-limiter' \
+--header 'Content-Type: application/json' \
+--body '{
+"userId": "adhoo",
+"targetEndpoint": "www.google.com"
+}'
+
+**_Response Headers_**
+
+| Header | Description |
+|--------|-------------|
+| X-Ratelimit-Limit | Maximum requests allowed per window |
+| X-Ratelimit-Remaining | Requests remaining in current window |
+| Retry-After | Seconds to wait before retrying (only on 429) |
+
+---
