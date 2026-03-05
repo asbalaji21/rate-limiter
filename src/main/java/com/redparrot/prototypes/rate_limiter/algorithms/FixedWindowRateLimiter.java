@@ -8,11 +8,8 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-@Component
-public class FixedWindowRateLimiter {
-
-    private final static long WINDOW_SIZE_IN_SECONDS = 60L;
-    private final static int LIMIT_THRESHOLD = 3;
+@Component("FixedWindowRateLimiter")
+public class FixedWindowRateLimiter implements RateLimiter {
 
     private final StringRedisTemplate redisTemplate;
 
@@ -20,19 +17,20 @@ public class FixedWindowRateLimiter {
         this.redisTemplate = redisTemplate;
     }
 
-    private String generateKey(RateLimitRequest request) {
-        return String.format("prototype:rate-limit:%s:%s", request.userId(), request.targetEndpoint());
-    }
-
     public RateLimitCounter checkForRateLimit(RateLimitRequest request) {
         String redisKey = generateKey(request);
         long newValue = redisTemplate.opsForValue().increment(redisKey);
         if(newValue == 1) {
-            redisTemplate.expire(redisKey, Duration.ofSeconds(WINDOW_SIZE_IN_SECONDS));
+            redisTemplate.expire(redisKey, Duration.ofMillis(WINDOW_SIZE_IN_MILLISECONDS));
         }
         Long ttlInSeconds = redisTemplate.getExpire(redisKey, TimeUnit.SECONDS);
-        long ttl = (ttlInSeconds != null && ttlInSeconds > 0) ? ttlInSeconds : WINDOW_SIZE_IN_SECONDS;
+        long ttl = (ttlInSeconds != null && ttlInSeconds > 0) ? ttlInSeconds : WINDOW_SIZE_IN_MILLISECONDS * 1_000;
         return new RateLimitCounter(newValue > LIMIT_THRESHOLD, ttl, LIMIT_THRESHOLD,
                 Math.max(0, LIMIT_THRESHOLD - newValue));
+    }
+
+    @Override
+    public String getAlgorithmName() {
+        return "FIXED_WINDOW";
     }
 }
