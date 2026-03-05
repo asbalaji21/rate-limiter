@@ -56,7 +56,7 @@ Once the key is expired, it is removed from the redis and the same key is create
 > postman request POST 'http://localhost:8080/v1/rate-limiter' \
 --header 'Content-Type: application/json' \
 --body '{
-"userId": "adhoo",
+"userId": "sample-user",
 "targetEndpoint": "www.google.com"
 }'
 
